@@ -1,7 +1,6 @@
 import 'package:asallenshih_flutter_util/device.dart';
 import 'package:asallenshih_flutter_util/log.dart';
-import 'package:device_info_plus/device_info_plus.dart'
-    deferred as device_info_plus;
+import 'package:device_info_plus/device_info_plus.dart';
 
 class DeviceInfo {
   static DeviceInfoData? _data;
@@ -14,8 +13,7 @@ class DeviceInfo {
   static DeviceInfoData get data => _data ?? DeviceInfoData();
 
   static Future<DeviceInfoData> getData() async {
-    await device_info_plus.loadLibrary();
-    final deviceInfoPlugin = device_info_plus.DeviceInfoPlugin();
+    final deviceInfoPlugin = DeviceInfoPlugin();
     try {
       if (Device.isWeb) {
         final webBrowserInfo = await deviceInfoPlugin.webBrowserInfo;
