@@ -39,7 +39,7 @@ enum Platform {
     } else if (Device.isLinux) {
       return Platform.linux;
     } else if (Device.isWeb) {
-      final String userAgent = DeviceInfo.data?.systemVersion?.toLowerCase() ?? 'unknown';
+      final String userAgent = DeviceInfo.data.systemVersion?.toLowerCase() ?? 'unknown';
       if (userAgent.contains('android')) {
         return Platform.webAndroid;
       } else if (userAgent.contains(RegExp(r'iphone|ipad|ipod'))) {

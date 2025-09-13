@@ -14,5 +14,6 @@ class Device {
       !isWeb && defaultTargetPlatform == TargetPlatform.linux;
   static bool get isFuchsia =>
       !isWeb && defaultTargetPlatform == TargetPlatform.fuchsia;
-  static bool get supportedWebView => isAndroid || isIOS;
+  static bool get supportedWebView => isAndroid || isIOS || isWindows || isMacOS;
+  static bool get supportedWebViewOrIframe => supportedWebView || isWeb;
 }
