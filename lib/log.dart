@@ -12,7 +12,7 @@ class Log {
   static int stackTraceBeginIndex = 0;
   static String Function(DateTime) dateTimeFormat = DateTimeFormat.dateAndTime;
   static PrettyPrinter get _prettyPrinter => PrettyPrinter(
-    stackTraceBeginIndex: stackTraceBeginIndex + 3,
+    stackTraceBeginIndex: stackTraceBeginIndex,
     methodCount: 3,
     errorMethodCount: 10,
     lineLength: stdout.terminalColumns,
