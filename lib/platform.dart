@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:asallenshih_flutter_util/device.dart';
-import 'package:flutter/foundation.dart';
+import 'package:asallenshih_flutter_util/device_info.dart';
 
-enum Platforms {
+enum Platform {
+  unknown,
   android,
   ios,
   windows,
@@ -16,49 +15,46 @@ enum Platforms {
   webMacOS(isWeb: true),
   webLinux(isWeb: true);
 
-  const Platforms({this.isWeb = false});
+  const Platform({this.isWeb = false});
   final bool isWeb;
-}
-
-class Platform {
-  static Platforms? current;
-  static Future<void> init() async {
-    if (current != null) {
-      return;
-    }
-    current = await _get();
-  }
-
-  static FutureOr<Platforms?> _get() async {
-    if (kIsWeb) {
-      final String systemVersion = (await Device.systemVersion() ?? '')
-          .toLowerCase();
-      if (systemVersion.contains('android')) {
-        return Platforms.webAndroid;
-      } else if (systemVersion.contains('iphone') ||
-          systemVersion.contains('ipad') ||
-          systemVersion.contains('ipod')) {
-        return Platforms.webIOS;
-      } else if (systemVersion.contains('windows')) {
-        return Platforms.webWindows;
-      } else if (systemVersion.contains('macintosh')) {
-        return Platforms.webMacOS;
-      } else if (systemVersion.contains('linux')) {
-        return Platforms.webLinux;
-      } else {
-        return Platforms.web;
-      }
-    } else if (Device.isAndroid) {
-      return Platforms.android;
+  Platform get system => isWeb
+      ? switch (this) {
+          Platform.webAndroid => Platform.android,
+          Platform.webIOS => Platform.ios,
+          Platform.webWindows => Platform.windows,
+          Platform.webMacOS => Platform.macOS,
+          Platform.webLinux => Platform.linux,
+          _ => Platform.unknown,
+        }
+      : this;
+  static Platform get current {
+    if (Device.isAndroid) {
+      return Platform.android;
     } else if (Device.isIOS) {
-      return Platforms.ios;
+      return Platform.ios;
     } else if (Device.isWindows) {
-      return Platforms.windows;
+      return Platform.windows;
     } else if (Device.isMacOS) {
-      return Platforms.macOS;
+      return Platform.macOS;
     } else if (Device.isLinux) {
-      return Platforms.linux;
+      return Platform.linux;
+    } else if (Device.isWeb) {
+      final String userAgent = DeviceInfo.data?.systemVersion?.toLowerCase() ?? 'unknown';
+      if (userAgent.contains('android')) {
+        return Platform.webAndroid;
+      } else if (userAgent.contains(RegExp(r'iphone|ipad|ipod'))) {
+        return Platform.webIOS;
+      } else if (userAgent.contains('windows')) {
+        return Platform.webWindows;
+      } else if (userAgent.contains('macintosh')) {
+        return Platform.webMacOS;
+      } else if (userAgent.contains('linux')) {
+        return Platform.webLinux;
+      } else {
+        return Platform.web;
+      }
+    } else {
+      return Platform.unknown;
     }
-    return null;
   }
 }
