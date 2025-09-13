@@ -1,7 +1,7 @@
 import 'package:asallenshih_flutter_util/device.dart';
 import 'package:asallenshih_flutter_util/device_info.dart';
 
-enum Platform {
+enum DevicePlatform {
   unknown,
   android,
   ios,
@@ -15,46 +15,46 @@ enum Platform {
   webMacOS(isWeb: true),
   webLinux(isWeb: true);
 
-  const Platform({this.isWeb = false});
+  const DevicePlatform({this.isWeb = false});
   final bool isWeb;
-  Platform get system => isWeb
+  DevicePlatform get system => isWeb
       ? switch (this) {
-          Platform.webAndroid => Platform.android,
-          Platform.webIOS => Platform.ios,
-          Platform.webWindows => Platform.windows,
-          Platform.webMacOS => Platform.macOS,
-          Platform.webLinux => Platform.linux,
-          _ => Platform.unknown,
+          DevicePlatform.webAndroid => DevicePlatform.android,
+          DevicePlatform.webIOS => DevicePlatform.ios,
+          DevicePlatform.webWindows => DevicePlatform.windows,
+          DevicePlatform.webMacOS => DevicePlatform.macOS,
+          DevicePlatform.webLinux => DevicePlatform.linux,
+          _ => DevicePlatform.unknown,
         }
       : this;
-  static Platform get current {
+  static DevicePlatform get current {
     if (Device.isAndroid) {
-      return Platform.android;
+      return DevicePlatform.android;
     } else if (Device.isIOS) {
-      return Platform.ios;
+      return DevicePlatform.ios;
     } else if (Device.isWindows) {
-      return Platform.windows;
+      return DevicePlatform.windows;
     } else if (Device.isMacOS) {
-      return Platform.macOS;
+      return DevicePlatform.macOS;
     } else if (Device.isLinux) {
-      return Platform.linux;
+      return DevicePlatform.linux;
     } else if (Device.isWeb) {
       final String userAgent = DeviceInfo.data.systemVersion?.toLowerCase() ?? 'unknown';
       if (userAgent.contains('android')) {
-        return Platform.webAndroid;
+        return DevicePlatform.webAndroid;
       } else if (userAgent.contains(RegExp(r'iphone|ipad|ipod'))) {
-        return Platform.webIOS;
+        return DevicePlatform.webIOS;
       } else if (userAgent.contains('windows')) {
-        return Platform.webWindows;
+        return DevicePlatform.webWindows;
       } else if (userAgent.contains('macintosh')) {
-        return Platform.webMacOS;
+        return DevicePlatform.webMacOS;
       } else if (userAgent.contains('linux')) {
-        return Platform.webLinux;
+        return DevicePlatform.webLinux;
       } else {
-        return Platform.web;
+        return DevicePlatform.web;
       }
     } else {
-      return Platform.unknown;
+      return DevicePlatform.unknown;
     }
   }
 }
