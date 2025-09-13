@@ -5,8 +5,8 @@ import 'package:asallenshih_flutter_util/package_info.dart'
 
 class AsallenshihFlutterUtil {
   static Future<void> init({
-    bool deviceInfo = true,
-    bool packageInfo = true,
+    bool deviceInfo = false,
+    bool packageInfo = false,
     String? packageInfoBaseUrl,
   }) async {
     if (deviceInfo) {
