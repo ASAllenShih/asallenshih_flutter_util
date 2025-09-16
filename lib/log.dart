@@ -15,7 +15,7 @@ class Log {
     stackTraceBeginIndex: stackTraceBeginIndex + 3,
     methodCount: 3,
     errorMethodCount: 10,
-    lineLength: stdout.terminalColumns,
+    lineLength: stdout.hasTerminal ? stdout.terminalColumns : 120,
     colors: colors && !colorsGrep && stdout.hasTerminal,
     printEmojis: emojis,
     dateTimeFormat: dateTimeFormat,
