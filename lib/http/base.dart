@@ -95,7 +95,9 @@ abstract class HttpBase {
   void _streamOnDone({void Function(int downloaded, int total)? onProgress}) {
     log.i('Download complete: ${uri.toString()}');
     _onProgress(onProgress);
-    _completer.complete();
+    if (!_completer.isCompleted) {
+      _completer.complete();
+    }
   }
 
   void _onProgress(void Function(int, int)? onProgress) {
