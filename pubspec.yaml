@@ -4,8 +4,8 @@ version: 0.0.1
 homepage:
 
 environment:
-  sdk: ^3.8.1
-  flutter: ">=1.17.0"
+  sdk: ^3.9.2
+  flutter: ^3.35.4
 
 dependencies:
   crypto: ^3.0.6
