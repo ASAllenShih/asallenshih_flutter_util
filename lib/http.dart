@@ -29,18 +29,21 @@ class Http {
     void Function(int downloaded, int total)? onProgress,
   }) async {
     await http.loadLibrary();
-    final String requestMethod = await _loadAddon(
-      method,
-      (addon, previous) => addon.method(previous),
+    final String requestMethod = await addons.fold<Future<String>>(
+      Future.value(method),
+      (Future<String> previous, HttpAddon addon) async =>
+          await addon.method(await previous),
     );
-    final Uri requestUri = await _loadAddon(
-      uri,
-      (addon, previous) => addon.uri(previous),
+    final Uri requestUri = await addons.fold<Future<Uri>>(
+      Future.value(uri),
+      (Future<Uri> previous, HttpAddon addon) async =>
+          await addon.uri(await previous),
     );
     final request = http.Request(requestMethod, requestUri);
-    final Object? requestBody = await _loadAddon(
-      body,
-      (addon, previous) => addon.body(previous),
+    final Object? requestBody = await addons.fold<Future<Object?>>(
+      Future.value(body),
+      (Future<Object?> previous, HttpAddon addon) async =>
+          await addon.body(await previous),
     );
     if (requestBody != null) {
       if (requestBody is String) {
@@ -49,10 +52,12 @@ class Http {
         throw Exception('Unsupported body type');
       }
     }
-    final Map<String, String> requestHeaders = await _loadAddon(
-      headers,
-      (addon, previous) => addon.headers(previous),
-    );
+    final Map<String, String> requestHeaders = await addons
+        .fold<Future<Map<String, String>>>(
+          Future.value(headers),
+          (Future<Map<String, String>> previous, HttpAddon addon) async =>
+              await addon.headers(await previous),
+        );
     request.headers.addAll(requestHeaders);
     try {
       _onProgress(onProgress);
@@ -83,28 +88,25 @@ class Http {
     }
   }
 
-  Future<T> _loadAddon<T>(
-    T value,
-    Future<T> Function(HttpAddon addon, T previous) loader,
-  ) => addons.fold<Future<T>>(
-    Future.value(value),
-    (Future<T> previous, HttpAddon addon) async =>
-        await loader(addon, await previous),
-  );
-
   void _sendResponse({
     int? code,
     Map<String, String>? headers,
     int? contentLength,
   }) {
-    _loadAddon(
-      code,
-      (addon, previous) => addon.responseCode(previous),
-    ).then((value) => responseCode = value);
-    _loadAddon(
-      headers,
-      (addon, previous) => addon.responseHeaders(previous),
-    ).then((value) => responseHeaders = value);
+    addons
+        .fold<Future<int?>>(
+          Future.value(code),
+          (Future<int?> previous, HttpAddon addon) async =>
+              await addon.responseCode(await previous),
+        )
+        .then((value) => responseCode = value);
+    addons
+        .fold<Future<Map<String, String>?>>(
+          Future.value(headers),
+          (Future<Map<String, String>?> previous, HttpAddon addon) async =>
+              await addon.responseHeaders(await previous),
+        )
+        .then((value) => responseHeaders = value);
     total = contentLength ?? 0;
   }
 
@@ -137,9 +139,10 @@ class Http {
 
   Future<List<int>?> get getBytes async {
     await _completer.future;
-    final List<int> chunks = await _loadAddon(
-      _chunks,
-      (addon, previous) => addon.responseChunks(previous),
+    final List<int> chunks = await addons.fold<Future<List<int>>>(
+      Future.value(_chunks),
+      (Future<List<int>> previous, HttpAddon addon) async =>
+          await addon.responseChunks(await previous),
     );
     if (chunks.isEmpty) {
       return null;
