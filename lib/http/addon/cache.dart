@@ -86,8 +86,10 @@ class HttpAddonCache extends HttpAddon {
       : null;
   Future<void> _saveCache() async {
     if (_cachedCode == null || _cachedCode! < 200 || _cachedCode! >= 300) {
+      log.i('Not saving cache for non-2xx response: ${_uri?.toString()}');
       return;
     }
+    log.i('Saving cache: ${_uri?.toString()}');
     await _cache().writeJson(_cachedAll);
   }
 
@@ -130,6 +132,7 @@ class HttpAddonCache extends HttpAddon {
       final int? code = _cachedCode;
       if (code != null) {
         _useCache = true;
+        log.i('Response code from cache: ${_uri?.toString()}');
         return super.responseCode(code);
       }
     } else {
@@ -146,6 +149,7 @@ class HttpAddonCache extends HttpAddon {
       final Map<String, String>? cachedHeaders = _cachedHeaders;
       if (cachedHeaders != null) {
         _useCache = true;
+        log.i('Headers from cache: ${_uri?.toString()}');
         return super.responseHeaders(cachedHeaders);
       }
     } else {
@@ -160,7 +164,7 @@ class HttpAddonCache extends HttpAddon {
       final List<int>? cachedBytes = _cachedBytes;
       if (cachedBytes != null) {
         _useCache = true;
-        log.i('Download from cache: ${_uri?.toString()}');
+        log.i('Data from cache: ${_uri?.toString()}');
         return super.responseChunks(cachedBytes);
       }
     } else {
