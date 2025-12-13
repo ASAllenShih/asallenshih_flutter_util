@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:asallenshih_flutter_util/cache.dart';
 import 'package:asallenshih_flutter_util/cache/addon.dart';
 import 'package:asallenshih_flutter_util/http/addon.dart';
+import 'package:asallenshih_flutter_util/log.dart';
 import 'package:crypto/crypto.dart';
 
 class HttpAddonCache extends HttpAddon {
@@ -159,6 +160,7 @@ class HttpAddonCache extends HttpAddon {
       final List<int>? cachedBytes = _cachedBytes;
       if (cachedBytes != null) {
         _useCache = true;
+        log.i('Download from cache: ${_uri?.toString()}');
         return super.responseChunks(cachedBytes);
       }
     } else {
