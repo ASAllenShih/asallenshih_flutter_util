@@ -160,6 +160,7 @@ class HttpAddonCache extends HttpAddon {
 
   @override
   Future<List<int>> responseChunks(List<int> chunksData) async {
+    log.d('HttpAddonCache responseChunks called');
     if (_useCache || chunksData.isEmpty) {
       final List<int>? cachedBytes = _cachedBytes;
       if (cachedBytes != null) {
