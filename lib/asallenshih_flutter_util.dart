@@ -15,6 +15,7 @@ class AsallenshihFlutterUtil {
     }
     if (packageInfo) {
       await package_info.loadLibrary();
+      package_info.PackageInfo.baseUrl = packageInfoBaseUrl;
       await package_info.PackageInfo.init();
     }
   }

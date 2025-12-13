@@ -2,25 +2,38 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:asallenshih_flutter_util/device.dart';
+import 'package:asallenshih_flutter_util/cache/addon.dart';
+import 'package:asallenshih_flutter_util/device.dart' deferred as device;
 import 'package:asallenshih_flutter_util/log.dart';
 import 'package:path_provider/path_provider.dart' deferred as path_provider;
 
 class Cache {
   final String key;
-  Cache({required this.key});
-  static Directory? _cacheDir;
-  static Future<Directory?> get cacheDir async {
-    if (!Device.isAndroid &&
-        !Device.isIOS &&
-        !Device.isMacOS &&
-        !Device.isWindows &&
-        !Device.isLinux) {
+  final List<CacheAddon> addons;
+  Directory? dir;
+  Cache({required this.key, this.dir, this.addons = const []});
+  static Directory? _defaultDir;
+  static Future<Directory?> get defaultDirInit async {
+    await device.loadLibrary();
+    if (!device.Device.isAndroid &&
+        !device.Device.isIOS &&
+        !device.Device.isMacOS &&
+        !device.Device.isWindows &&
+        !device.Device.isLinux) {
       return null;
     }
     await path_provider.loadLibrary();
-    _cacheDir ??= await path_provider.getApplicationCacheDirectory();
-    return _cacheDir;
+    return await path_provider.getApplicationCacheDirectory();
+  }
+
+  static Future<Directory?> get defaultDir async {
+    _defaultDir ??= await defaultDirInit;
+    return _defaultDir;
+  }
+
+  Future<Directory?> cacheDir() async {
+    dir ??= await defaultDir;
+    return dir;
   }
 
   File? _cacheFile;
@@ -30,45 +43,52 @@ class Cache {
   }
 
   Future<File?> _cacheFileInit({bool create = false}) async {
-    Directory? dir = await cacheDir;
-    if (dir == null) return null;
-    File file = File('${dir.path}/$key');
-    if (!(await file.exists())) {
-      if (create) {
-        await file.create(recursive: true);
-      } else {
+    final Directory? dataDir = await cacheDir();
+    if (dataDir == null) {
+      return null;
+    }
+    final File file = File('${dataDir.path}/$key');
+    if (!await file.exists()) {
+      if (!create) {
         return null;
       }
+      await file.create(recursive: true);
     }
     return file;
   }
 
   Uint8List? _cacheBytes;
-  Future<Uint8List?> get read async {
-    _cacheBytes ??= await cacheRead;
-    return _cacheBytes;
-  }
-
-  Future<Uint8List?> get cacheRead async {
-    File? file = await cacheFile();
-    if (file == null) {
+  Future<Uint8List?> get _readInit async {
+    final File? file = await cacheFile();
+    if (file == null || !await file.exists()) {
       return null;
     }
     return await file.readAsBytes();
   }
 
-  Uint8List? genInputBytes(Uint8List? bytes) {
+  Future<Uint8List?> get read async {
+    _cacheBytes ??= await _readInit;
+    final Uint8List? bytes = await addons.fold<Future<Uint8List?>>(
+      Future.value(_cacheBytes),
+      (Future<Uint8List?> future, CacheAddon item) async {
+        return await item.read(await future);
+      },
+    );
+    if (addons.any((item) => item.cacheDelete)) {
+      await delete();
+      return null;
+    }
     return bytes;
   }
 
   Future<String?> get readString async {
-    Uint8List? bytes = await read;
+    final Uint8List? bytes = await read;
     if (bytes == null) return null;
     return Utf8Decoder().convert(bytes);
   }
 
   Future<dynamic> get readJson async {
-    String? str = await readString;
+    final String? str = await readString;
     if (str == null) return null;
     try {
       return jsonDecode(str);
@@ -78,13 +98,21 @@ class Cache {
     }
   }
 
-  Future<bool?> write(Uint8List bytes) async {
-    bytes = genInputBytes(bytes)!;
-    _cacheBytes = bytes;
-    File? file = await cacheFile(create: true);
+  Future<bool?> write(Uint8List? bytes) async {
+    final Uint8List? dataBytes = await addons.reversed.fold<Future<Uint8List?>>(
+      Future.value(bytes),
+      (Future<Uint8List?> future, CacheAddon item) async {
+        return await item.write(await future);
+      },
+    );
+    if (dataBytes == null) {
+      return await delete();
+    }
+    _cacheBytes = dataBytes;
+    final File? file = await cacheFile(create: true);
     if (file == null) return null;
     try {
-      await file.writeAsBytes(bytes);
+      await file.writeAsBytes(dataBytes);
     } catch (e) {
       log.e('Cache write error', error: e);
       return false;
@@ -108,12 +136,12 @@ class Cache {
   }
 
   Future<bool?> delete() async {
-    _cacheBytes = null;
-    File? file = await cacheFile();
+    final File? file = await cacheFile();
     if (file == null) return null;
     try {
       await file.delete();
       _cacheFile = null;
+      _cacheBytes = null;
     } catch (e) {
       log.e('Cache delete error', error: e);
       return false;
