@@ -1,3 +1,5 @@
+import 'package:asallenshih_flutter_util/http.dart';
+
 class HttpAddon {
   bool request = true;
   Future<String> method(String methodData) async {
@@ -14,6 +16,10 @@ class HttpAddon {
 
   Future<Map<String, String>> headers(Map<String, String> headersData) async {
     return headersData;
+  }
+
+  Future<bool?> requestError(Http http, Object error) async {
+    return null;
   }
 
   Future<int?> responseCode(int? codeData) async {

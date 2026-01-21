@@ -65,20 +65,34 @@ class Http {
       _streamOnDone(onProgress: onProgress);
     } else {
       final client = http.Client();
-      final response = await client.send(request);
-      _sendResponse(
-        code: response.statusCode,
-        headers: response.headers,
-        contentLength: response.contentLength,
-      );
-      response.stream.listen(
-        (List<int> chunk) => _streamChunk(chunk: chunk, onProgress: onProgress),
-        onDone: () => _streamOnDone(onProgress: onProgress),
-        onError: (Object error) {
-          log.e('Download error', error: error);
-        },
-        cancelOnError: true,
-      );
+      try {
+        final response = await client.send(request);
+        _sendResponse(
+          code: response.statusCode,
+          headers: response.headers,
+          contentLength: response.contentLength,
+        );
+        response.stream.listen(
+          (List<int> chunk) =>
+              _streamChunk(chunk: chunk, onProgress: onProgress),
+          onDone: () => _streamOnDone(onProgress: onProgress),
+          onError: (Object error) {
+            log.e('Download error', error: error);
+          },
+          cancelOnError: true,
+        );
+      } catch (error) {
+        for (final addon in addons) {
+          final bool? handled = await addon.requestError(this, error);
+          if (handled == true) {
+            return;
+          } else if (handled == false) {
+            rethrow;
+          }
+        }
+      } finally {
+        client.close();
+      }
     }
   }
 
