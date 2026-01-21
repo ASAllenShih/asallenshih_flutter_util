@@ -59,32 +59,26 @@ class Http {
               await addon.headers(await previous),
         );
     request.headers.addAll(requestHeaders);
-    try {
-      _onProgress(onProgress);
-      if (addons.any((addon) => addon.request == false)) {
-        _sendResponse();
-        _streamOnDone(onProgress: onProgress);
-      } else {
-        final client = http.Client();
-        final response = await client.send(request);
-        _sendResponse(
-          code: response.statusCode,
-          headers: response.headers,
-          contentLength: response.contentLength,
-        );
-        response.stream.listen(
-          (List<int> chunk) =>
-              _streamChunk(chunk: chunk, onProgress: onProgress),
-          onDone: () => _streamOnDone(onProgress: onProgress),
-          onError: (Object error) {
-            log.e('Download error', error: error);
-          },
-          cancelOnError: true,
-        );
-      }
-    } catch (e) {
-      log.e('Download error', error: e);
-      _complete();
+    _onProgress(onProgress);
+    if (addons.any((addon) => addon.request == false)) {
+      _sendResponse();
+      _streamOnDone(onProgress: onProgress);
+    } else {
+      final client = http.Client();
+      final response = await client.send(request);
+      _sendResponse(
+        code: response.statusCode,
+        headers: response.headers,
+        contentLength: response.contentLength,
+      );
+      response.stream.listen(
+        (List<int> chunk) => _streamChunk(chunk: chunk, onProgress: onProgress),
+        onDone: () => _streamOnDone(onProgress: onProgress),
+        onError: (Object error) {
+          log.e('Download error', error: error);
+        },
+        cancelOnError: true,
+      );
     }
   }
 
@@ -107,7 +101,7 @@ class Http {
               await addon.responseHeaders(await previous),
         )
         .then((value) => responseHeaders = value);
-    total = contentLength ?? 0;
+    total += contentLength ?? 0;
   }
 
   void _complete() {
