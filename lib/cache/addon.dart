@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 class CacheAddon {
   bool cacheDelete = false;
+  bool cacheExpire = false;
   Future<Uint8List?> read(Uint8List? bytes) async {
     return bytes;
   }

@@ -114,6 +114,9 @@ class HttpAddonCache extends HttpAddon {
         cacheData != null &&
         cacheData is Map<String, dynamic>) {
       _cachedAll = cacheData;
+      if (cacheInstance.expired == false) {
+        request = false;
+      }
       final String? lastModified = _cachedHeader('last-modified');
       final String? etag = _cachedHeader('etag');
       if (lastModified != null) {

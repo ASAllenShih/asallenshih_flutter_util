@@ -7,6 +7,7 @@ class CacheAddonTime extends CacheAddon {
   static const String suffix = ';\n';
   final Duration duration;
   bool ignoreExpire;
+  DateTime? expireTime;
   CacheAddonTime({this.duration = Duration.zero, this.ignoreExpire = false});
   @override
   Future<Uint8List?> read(Uint8List? bytes) {
@@ -30,9 +31,12 @@ class CacheAddonTime extends CacheAddon {
     }
     final timeBytes = bytes.sublist(prefixLength, suffixIndex);
     final String timeStr = bytesToString(timeBytes);
-    final DateTime? time = DateTime.tryParse(timeStr);
-    if ((time == null || DateTime.now().isAfter(time)) && !ignoreExpire) {
-      return super.read(null);
+    expireTime = DateTime.tryParse(timeStr);
+    if ((expireTime == null || DateTime.now().isAfter(expireTime!))) {
+      cacheExpire = true;
+      if (!ignoreExpire) {
+        return super.read(null);
+      }
     }
     final int dataStartIndex = suffixIndex + suffixLength;
     return super.read(bytes.sublist(dataStartIndex));
@@ -45,7 +49,10 @@ class CacheAddonTime extends CacheAddon {
     }
     final Uint8List prefixBytes = stringToBytes(prefix);
     final Uint8List suffixBytes = stringToBytes(suffix);
-    final DateTime time = DateTime.now().add(duration);
+    final DateTime timeAdd = DateTime.now().add(duration);
+    final DateTime time = expireTime != null && timeAdd.isBefore(expireTime!)
+        ? expireTime!
+        : timeAdd;
     final Uint8List timeBytes = stringToBytes(time.toIso8601String());
     return super.write(
       combineBytes([prefixBytes, timeBytes, suffixBytes, bytes]),

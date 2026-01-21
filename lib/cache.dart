@@ -12,6 +12,7 @@ class Cache {
   final List<CacheAddon> addons;
   Directory? dir;
   Cache({required this.key, this.dir, this.addons = const []});
+  bool? expired;
   static Directory? _defaultDir;
   static Future<Directory?> get defaultDirInit async {
     await device.loadLibrary();
@@ -74,6 +75,11 @@ class Cache {
         return await item.read(await future);
       },
     );
+    if (addons.any((item) => item.cacheExpire)) {
+      expired = true;
+    } else {
+      expired = false;
+    }
     if (addons.any((item) => item.cacheDelete)) {
       await delete();
       return null;
