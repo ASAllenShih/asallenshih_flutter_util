@@ -2,8 +2,11 @@ import 'package:asallenshih_flutter_util/device_info.dart'
     deferred as device_info;
 import 'package:asallenshih_flutter_util/package_info.dart'
     deferred as package_info;
+import 'package:flutter/widgets.dart';
 
 class AsallenshihFlutterUtil {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
   static Future<void> init({
     bool deviceInfo = false,
     bool packageInfo = false,
