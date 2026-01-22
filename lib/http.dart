@@ -85,11 +85,13 @@ class Http {
         for (final addon in addons) {
           final bool? handled = await addon.requestError(this, error);
           if (handled == true) {
+            _streamOnDone(onProgress: onProgress);
             return;
           } else if (handled == false) {
             rethrow;
           }
         }
+        _streamOnDone(onProgress: onProgress);
       } finally {
         client.close();
       }
