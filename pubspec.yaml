@@ -18,6 +18,7 @@ dependencies:
   package_info_plus: ^9.0.0
   path_provider: ^2.1.5
   retry: ^3.1.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
