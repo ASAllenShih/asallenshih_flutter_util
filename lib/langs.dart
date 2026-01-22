@@ -1,12 +1,22 @@
-enum Langs {
-  en(lc: 'en', priority: 3),
-  zhHantTW(lc: 'zh', sc: 'Hant', cc: 'TW', priority: 2),
-  zhHant(lc: 'zh', sc: 'Hant', priority: 1),
-  zh(lc: 'zh');
+import 'dart:ui';
 
-  final String lc;
-  final String? sc;
-  final String? cc;
+enum Langs {
+  en(locale: Locale('en'), priority: 3),
+  zhHantTW(
+    locale: Locale.fromSubtags(
+      languageCode: 'zh',
+      scriptCode: 'Hant',
+      countryCode: 'TW',
+    ),
+    priority: 2,
+  ),
+  zhHant(
+    locale: Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+    priority: 1,
+  ),
+  zh(locale: Locale.fromSubtags(languageCode: 'zh'));
+
+  final Locale locale;
   final int priority;
-  const Langs({required this.lc, this.sc, this.cc, this.priority = 0});
+  const Langs({required this.locale, this.priority = 0});
 }

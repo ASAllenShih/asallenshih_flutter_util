@@ -20,15 +20,17 @@ class Lang {
     textsList.sort((a, b) => b.key.priority.compareTo(a.key.priority));
     if (locale != null) {
       final String lc = locale?.languageCode ?? 'en';
-      final lcMatch = textsList.where((e) => e.key.lc == lc);
+      final lcMatch = textsList.where((e) => e.key.locale.languageCode == lc);
       if (lcMatch.isNotEmpty) {
         final String? sc = locale?.scriptCode;
         if (sc != null) {
-          final scMatch = lcMatch.where((e) => e.key.sc == sc);
+          final scMatch = lcMatch.where((e) => e.key.locale.scriptCode == sc);
           if (scMatch.isNotEmpty) {
             final String? cc = locale?.countryCode;
             if (cc != null) {
-              final ccMatch = scMatch.where((e) => e.key.cc == cc);
+              final ccMatch = scMatch.where(
+                (e) => e.key.locale.countryCode == cc,
+              );
               if (ccMatch.isNotEmpty) {
                 return ccMatch.first.value;
               }
@@ -38,7 +40,7 @@ class Lang {
         }
         final String? cc = locale?.countryCode;
         if (cc != null) {
-          final ccMatch = lcMatch.where((e) => e.key.cc == cc);
+          final ccMatch = lcMatch.where((e) => e.key.locale.countryCode == cc);
           if (ccMatch.isNotEmpty) {
             return ccMatch.first.value;
           }
@@ -48,4 +50,5 @@ class Lang {
     }
     return textsList.first.value;
   }
+  
 }
