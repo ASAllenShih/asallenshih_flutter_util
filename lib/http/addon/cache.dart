@@ -13,7 +13,6 @@ class HttpAddonCache extends HttpAddon {
   List<CacheAddon> addons;
   String? _method;
   Uri? _uri;
-  Map<String, dynamic>? _cachedAll;
   bool _useCache = false;
   HttpAddonCache({this.cache, this.key, this.dir, this.addons = const []});
   Cache _cache() {
@@ -24,73 +23,33 @@ class HttpAddonCache extends HttpAddon {
     );
   }
 
-  Map<String, dynamic>? get _cached {
-    final String? indexKey = _uri?.removeFragment().toString();
-    if (_cachedAll != null &&
-        indexKey != null &&
-        _cachedAll!.containsKey(indexKey) &&
-        _cachedAll![indexKey] is Map<String, dynamic>) {
-      return _cachedAll![indexKey] as Map<String, dynamic>;
-    }
-    return null;
-  }
-
-  set _cached(Map<String, dynamic>? value) {
-    final String? indexKey = _uri?.removeFragment().toString();
-    if (indexKey != null && value != null) {
-      _cachedAll ??= <String, dynamic>{};
-      _cachedAll![indexKey] = value;
-    }
-  }
-
-  int? get _cachedCode =>
-      _cached != null && _cached!.containsKey('code') && _cached!['code'] is int
-      ? (_cached!['code'] as int)
+  Map<String, dynamic>? _cachedData;
+  Map<String, String>? get _cachedHeaders => _cachedData != null
+      ? Map<String, String>.from(_cachedData!['headers'])
       : null;
-  set _cachedCode(int? value) {
-    if (value != null) {
-      _cached ??= <String, dynamic>{};
-      _cached!['code'] = value;
-    }
-  }
-
-  Map<String, String>? get _cachedHeaders =>
-      _cached != null &&
-          _cached!.containsKey('headers') &&
-          _cached!['headers'] is Map<String, String>
-      ? (_cached!['headers'] as Map<String, String>?)
-      : null;
-  set _cachedHeaders(Map<String, String>? value) {
-    if (value != null) {
-      _cached ??= <String, dynamic>{};
-      _cached!['headers'] = value;
-    }
-  }
-
-  List<int>? get _cachedBytes =>
-      _cached != null &&
-          _cached!.containsKey('bytes') &&
-          _cached!['bytes'] is List<int>
-      ? (_cached!['bytes'] as List<int>)
-      : null;
-  set _cachedBytes(List<int>? value) {
-    if (value != null) {
-      _cached ??= <String, dynamic>{};
-      _cached!['bytes'] = value;
-    }
-  }
-
   String? _cachedHeader(String name) =>
-      _cachedHeaders != null && _cachedHeaders!.containsKey(name)
-      ? _cachedHeaders![name]
-      : null;
+      _cachedHeaders != null ? _cachedHeaders![name.toLowerCase()] : null;
+  int? get _cachedCode =>
+      _cachedData != null ? _cachedData!['code'] as int? : null;
+  List<int>? get _cachedBytes =>
+      _cachedData != null ? _cachedData!['bytes'] as List<int>? : null;
+
+  int? _saveCode;
+  Map<String, String>? _saveHeaders;
+  List<int>? _saveBytes;
   Future<void> _saveCache() async {
-    if (_cachedCode == null || _cachedCode! < 200 || _cachedCode! >= 300) {
-      log.i('Not saving cache for non-2xx response: ${_uri?.toString()}');
+    if (_saveCode == null || _saveHeaders == null || _saveBytes == null) {
       return;
     }
-    log.i('Saving cache: ${_uri?.toString()}');
-    await _cache().writeJson(_cachedAll);
+    final Cache cacheInstance = _cache();
+    final Map<String, dynamic> cacheData = {
+      'method': _method,
+      'uri': _uri.toString(),
+      'code': _saveCode,
+      'headers': _saveHeaders,
+      'bytes': _saveBytes,
+    };
+    await cacheInstance.writeJson(cacheData);
   }
 
   @override
@@ -109,11 +68,8 @@ class HttpAddonCache extends HttpAddon {
   Future<Map<String, String>> headers(Map<String, String> headersData) async {
     final headers = Map<String, String>.from(headersData);
     final Cache cacheInstance = _cache();
-    final cacheData = await cacheInstance.readJson;
-    if (_uri != null &&
-        cacheData != null &&
-        cacheData is Map<String, dynamic>) {
-      _cachedAll = cacheData;
+    _cachedData = await cacheInstance.readJson;
+    if (_uri != null && _cachedBytes != null && _cachedBytes!.isNotEmpty) {
       if (cacheInstance.expired == false) {
         request = false;
       }
@@ -135,11 +91,11 @@ class HttpAddonCache extends HttpAddon {
       final int? code = _cachedCode;
       if (code != null) {
         _useCache = true;
-        log.i('Response code from cache: ${_uri?.toString()}');
+        log.i('Response code $code from cache: ${_uri?.toString()}');
         return super.responseCode(code);
       }
-    } else {
-      _cachedCode = codeData;
+    } else if (codeData >= 200 && codeData < 300) {
+      _saveCode = codeData;
     }
     return super.responseCode(codeData);
   }
@@ -156,7 +112,7 @@ class HttpAddonCache extends HttpAddon {
         return super.responseHeaders(cachedHeaders);
       }
     } else {
-      _cachedHeaders = headersData;
+      _saveHeaders = headersData;
     }
     return super.responseHeaders(headersData);
   }
@@ -172,7 +128,7 @@ class HttpAddonCache extends HttpAddon {
         return super.responseChunks(cachedBytes);
       }
     } else {
-      _cachedBytes = chunksData;
+      _saveBytes = chunksData;
       await _saveCache();
     }
     return super.responseChunks(chunksData);
