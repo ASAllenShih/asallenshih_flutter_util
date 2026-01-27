@@ -32,7 +32,9 @@ class HttpAddonCache extends HttpAddon {
   int? get _cachedCode =>
       _cachedData != null ? _cachedData!['code'] as int? : null;
   List<int>? get _cachedBytes =>
-      _cachedData != null ? _cachedData!['bytes'] as List<int>? : null;
+      _cachedData != null && _cachedData!['bytes'] != null
+          ? List<int>.from(_cachedData!['bytes'])
+          : null;
 
   int? _saveCode;
   Map<String, String>? _saveHeaders;
