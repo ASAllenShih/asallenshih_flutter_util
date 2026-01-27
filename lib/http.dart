@@ -92,8 +92,6 @@ class Http {
           }
         }
         _streamOnDone(onProgress: onProgress);
-      } finally {
-        client.close();
       }
     }
   }
